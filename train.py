@@ -46,6 +46,8 @@ for episode in range(400):
 
     epsilon = max(0.1, epsilon * 0.995)
 
-    if (episode+1) % 50 == 0:
+    if (episode+1) % 10 == 0:
+        print(f"Episode {episode+1}, Loss: {loss.item():.4f}, Epsilon: {epsilon:.2f}")
+
+    if (episode+1) % 100 == 0:
         torch.save(model.state_dict(), f"model/dqn_model_episode_{episode+1}.pth")
-        print(f"Episode {episode+1}, epsilon={epsilon:.2f}")

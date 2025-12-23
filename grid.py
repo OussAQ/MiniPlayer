@@ -1,20 +1,24 @@
 import numpy as np
 import pygame
+import random
+from collections import deque
 
 GRID_SIZE = 20
 CELL_SIZE = 500 // GRID_SIZE # Cell size in pixels
 WINDOW_SIZE = GRID_SIZE * CELL_SIZE
 render_mode = False
-WALLS = [
-    [2,0], [2,3], [2,4],
-    [5,5], [5,6], [5,7],
-    [6,7], [7,7], [8,7],
-    [10,5], [11,5], [12,5],
-    [10,8], [10,9], [10,10], [10,11], [10,12],
-    [10,10], [10,11], [10,12],
-    [0,15], [1,15], [2,15], [3,15], [4,15], [5,15],
-    [15,2], [15,3], [15,4], [15,5]
-]
+LOW_RATIO = 10
+HIGH_RATIO = 30
+# WALLS = [
+#     [2,0], [2,3], [2,4],
+#     [5,5], [5,6], [5,7],
+#     [6,7], [7,7], [8,7],
+#     [10,5], [11,5], [12,5],
+#     [10,8], [10,9], [10,10], [10,11], [10,12],
+#     [10,10], [10,11], [10,12],
+#     [0,15], [1,15], [2,15], [3,15], [4,15], [5,15],
+#     [15,2], [15,3], [15,4], [15,5]
+# ]
 
 class GridGame:
     def __init__(self, size=GRID_SIZE, render_mode=render_mode):
@@ -31,7 +35,8 @@ class GridGame:
     def reset(self):
         self.player = [0, 0]    # Starting position
         self.goal = [self.size - 1, self.size - 1]  # Goal position
-        self.walls = WALLS
+        self.gen_ratio = random.randint(LOW_RATIO, HIGH_RATIO) / 100.0
+        self.generate_walls(self.gen_ratio)
         return self.get_state()
 
     def get_state(self):
@@ -64,6 +69,35 @@ class GridGame:
 
     def hit_wall(self, dx, dy):
         return [self.player[0] + dx, self.player[1] + dy] in self.walls
+    
+    def is_reachable(self):
+        # Simple BFS to ensure the goal is reachable from the start
+        queue = deque()
+        queue.append(self.player)
+        visited = set()
+        visited.add(tuple(self.player))
+
+        while queue:
+            x, y = queue.popleft()
+            if [x, y] == self.goal:
+                return True
+            for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < self.size and 0 <= ny < self.size and [nx, ny] not in self.walls and (nx, ny) not in visited:
+                    visited.add((nx, ny))
+                    queue.append([nx, ny])
+        return False
+    
+    def generate_walls(self, gen_ratio=0.2):
+        self.walls = []
+        while True:
+            self.walls = []
+            for x in range(self.size):
+                for y in range(self.size):
+                    if random.random() < gen_ratio and [x, y] != self.player and [x, y] != self.goal:
+                        self.walls.append([x, y])
+            if self.is_reachable():
+                break
 
     def render(self):
         self.screen.fill((30, 30, 30))
