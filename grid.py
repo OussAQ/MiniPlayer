@@ -5,6 +5,12 @@ GRID_SIZE = 20
 CELL_SIZE = 500 // GRID_SIZE # Cell size in pixels
 WINDOW_SIZE = GRID_SIZE * CELL_SIZE
 render_mode = False
+WALLS = [
+    [2,2], [2,3], [2,4],
+    [5,5], [5,6], [5,7],
+    [6,7], [7,7], [8,7],
+    [10,10], [10,11], [10,12]
+]
 
 class GridGame:
     def __init__(self, size=GRID_SIZE, render_mode=render_mode):
@@ -21,7 +27,7 @@ class GridGame:
     def reset(self):
         self.player = [0, 0]    # Starting position
         self.goal = [self.size - 1, self.size - 1]  # Goal position
-        self.enemies = []  # No enemies for now
+        self.walls = WALLS
         return self.get_state()
 
     def get_state(self):
@@ -88,6 +94,20 @@ class GridGame:
                 CELL_SIZE
             )
         )
+
+        # Walls (gray)
+        for wall in self.walls:
+            wx, wy = wall
+            pygame.draw.rect(
+                self.screen,
+                (100, 100, 100),
+                pygame.Rect(
+                    wy * CELL_SIZE,
+                    wx * CELL_SIZE,
+                    CELL_SIZE,
+                    CELL_SIZE
+                )
+            )
 
         pygame.display.flip()
         self.clock.tick(10)
