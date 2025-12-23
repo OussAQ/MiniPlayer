@@ -6,10 +6,14 @@ CELL_SIZE = 500 // GRID_SIZE # Cell size in pixels
 WINDOW_SIZE = GRID_SIZE * CELL_SIZE
 render_mode = False
 WALLS = [
-    [2,2], [2,3], [2,4],
+    [2,0], [2,3], [2,4],
     [5,5], [5,6], [5,7],
     [6,7], [7,7], [8,7],
-    [10,10], [10,11], [10,12]
+    [10,5], [11,5], [12,5],
+    [10,8], [10,9], [10,10], [10,11], [10,12],
+    [10,10], [10,11], [10,12],
+    [0,15], [1,15], [2,15], [3,15], [4,15], [5,15],
+    [15,2], [15,3], [15,4], [15,5]
 ]
 
 class GridGame:
@@ -42,11 +46,13 @@ class GridGame:
             
         moves = [(-1,0), (1,0), (0,-1), (0,1)]
         dx, dy = moves[action]
-
-        self.player[0] = np.clip(self.player[0] + dx, 0, self.size-1)
-        self.player[1] = np.clip(self.player[1] + dy, 0, self.size-1)
-
-        reward = -1
+        # Move player if no wall
+        if not self.hit_wall(dx, dy):
+            self.player[0] = np.clip(self.player[0] + dx, 0, self.size-1)
+            self.player[1] = np.clip(self.player[1] + dy, 0, self.size-1)
+            reward = -1
+        else:
+            reward = -5
         done = False
 
         if self.player == self.goal:
@@ -55,7 +61,10 @@ class GridGame:
 
         #self.render()
         return self.get_state(), reward, done
-    
+
+    def hit_wall(self, dx, dy):
+        return [self.player[0] + dx, self.player[1] + dy] in self.walls
+
     def render(self):
         self.screen.fill((30, 30, 30))
         # Draw grid
