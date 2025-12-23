@@ -9,7 +9,7 @@ render = True
 env = GridGame(render_mode=render)
 model = DQN()
 model.load_state_dict(torch.load("model/dqn_model_episode_400.pth"))
-
+random.seed(42)
 for episode in range(Niter):
     state = env.reset()
     done = False

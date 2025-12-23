@@ -1,8 +1,8 @@
 import numpy as np
 import pygame
 
-GRID_SIZE = 10
-CELL_SIZE = 50 # Cell size in pixels
+GRID_SIZE = 20
+CELL_SIZE = 500 // GRID_SIZE # Cell size in pixels
 WINDOW_SIZE = GRID_SIZE * CELL_SIZE
 render_mode = False
 
@@ -21,6 +21,7 @@ class GridGame:
     def reset(self):
         self.player = [0, 0]    # Starting position
         self.goal = [self.size - 1, self.size - 1]  # Goal position
+        self.enemies = []  # No enemies for now
         return self.get_state()
 
     def get_state(self):
