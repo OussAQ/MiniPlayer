@@ -1,16 +1,19 @@
 import numpy as np
 import pygame
 
-GRID_SIZE = 5
-CELL_SIZE = 100 # Cell size in pixels
+GRID_SIZE = 10
+CELL_SIZE = 50 # Cell size in pixels
 WINDOW_SIZE = GRID_SIZE * CELL_SIZE
+render_mode = False
 
 class GridGame:
-    def __init__(self, size=GRID_SIZE):
-        pygame.init()
-        self.screen = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE))
-        self.caption = pygame.display.set_caption("AI Grid Game")
-        self.clock = pygame.time.Clock()
+    def __init__(self, size=GRID_SIZE, render_mode=render_mode):
+        self.render_mode = render_mode
+        if render_mode:
+            pygame.init()
+            self.screen = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE))
+            self.caption = pygame.display.set_caption("AI Grid Game")
+            self.clock = pygame.time.Clock()
 
         self.size = size    # Size of the grid
         self.reset()    # Initialize the game
@@ -24,11 +27,12 @@ class GridGame:
         return np.array(self.player + self.goal, dtype=np.float32)
 
     def step(self, action): # 0=up, 1=down, 2=left, 3=right
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
-        
+        if self.render_mode:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                        pygame.quit()
+                        exit()
+            
         moves = [(-1,0), (1,0), (0,-1), (0,1)]
         dx, dy = moves[action]
 
