@@ -12,6 +12,7 @@ loss_fn = nn.MSELoss()
 
 gamma = 0.99
 epsilon = 1.0
+render = False
 
 for episode in range(400):
     state = env.reset()
@@ -46,4 +47,5 @@ for episode in range(400):
     epsilon = max(0.1, epsilon * 0.995)
 
     if (episode+1) % 50 == 0:
+        env.render()
         print(f"Episode {episode+1}, epsilon={epsilon:.2f}")
