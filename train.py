@@ -18,13 +18,14 @@ for episode in range(400):
     done = False
 
     while not done:
-        if random.random() < epsilon:
+        # Epsilon-greedy action selection
+        if random.random() < epsilon:   # Prioritize exploration in the beginning
             action = random.randint(0, 3)
         else:
-            with torch.no_grad():
+            with torch.no_grad():   # Exploit the learned policy
                 action = torch.argmax(model(torch.tensor(state, dtype=torch.float32))).item()
 
-        next_state, reward, done = env.step(action)
+        next_state, reward, done = env.step(action) # Take action in the environment
 
         with torch.no_grad():
             target = reward

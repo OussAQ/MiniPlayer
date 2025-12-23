@@ -10,5 +10,5 @@ class DQN(nn.Module):
             nn.Linear(64, 4)
         )
 
-    def forward(self, x):
+    def forward(self, x):   # x is the state in this case
         return self.net(x)
