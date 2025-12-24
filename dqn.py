@@ -4,10 +4,12 @@ import random
 from collections import namedtuple, deque
 
 class DQN(nn.Module):
-    def __init__(self):
+    def __init__(self, state_size=29):  # 4 (player+goal) + 25 (5x5 wall grid) = 29
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(4, 64),
+            nn.Linear(state_size, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, 4)
         )
@@ -15,8 +17,8 @@ class DQN(nn.Module):
     def forward(self, x):   # x is the state in this case
         return self.net(x)
     
-Transition = Transition = namedtuple('Transition',
-                        ('state', 'action', 'next_state', 'reward'))
+Transition = namedtuple('Transition',
+                        ('state', 'action', 'next_state', 'reward', 'done'))
 
 class ReplayMemory(object):
     def __init__(self, capacity):

@@ -7,9 +7,12 @@ from dqn import DQN
 Niter = 10
 render = True
 env = GridGame(render_mode=render)
-model = DQN()
-model.load_state_dict(torch.load("model/dqn_model_episode_400.pth"))
-random.seed(42)
+# Calculate state size: 4 (player+goal positions) + grid_size^2 (wall grid)
+state_size = 4 + env.size * env.size
+model = DQN(state_size=state_size)
+model.load_state_dict(torch.load("model/dqn_model_episode_1000.pth"))
+seed = 42
+random.seed(seed)
 for episode in range(Niter):
     state = env.reset()
     done = False
