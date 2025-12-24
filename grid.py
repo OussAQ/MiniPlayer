@@ -3,7 +3,7 @@ import pygame
 import random
 from collections import deque
 
-GRID_SIZE = 20
+GRID_SIZE = 5
 CELL_SIZE = 500 // GRID_SIZE # Cell size in pixels
 WINDOW_SIZE = GRID_SIZE * CELL_SIZE
 render_mode = False
@@ -74,26 +74,6 @@ class GridGame:
         if not (0 <= nx < self.size and 0 <= ny < self.size):
             return True
         return (nx, ny) in self.walls
-    
-    # def is_reachable(self):
-    #     start = tuple(self.player)
-    #     goal = tuple(self.goal)
-    #     if start == goal:
-    #         return True
-    #     q = deque([start])
-    #     visited = {start}
-    #     while q:
-    #         x, y = q.popleft()
-    #         for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-    #             nx, ny = x + dx, y + dy
-    #             if 0 <= nx < self.size and 0 <= ny < self.size:
-    #                 nt = (nx, ny)
-    #                 if nt == goal:
-    #                     return True
-    #                 if nt not in self.walls and nt not in visited:
-    #                     visited.add(nt)
-    #                     q.append(nt)
-    #     return False
     
     # Used sets instead of lists for walls for faster lookup
     def generate_walls(self, gen_ratio=0.2):
@@ -176,3 +156,23 @@ class GridGame:
 
         pygame.display.flip()
         self.clock.tick(10)
+
+    # def is_reachable(self):
+    #     start = tuple(self.player)
+    #     goal = tuple(self.goal)
+    #     if start == goal:
+    #         return True
+    #     q = deque([start])
+    #     visited = {start}
+    #     while q:
+    #         x, y = q.popleft()
+    #         for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+    #             nx, ny = x + dx, y + dy
+    #             if 0 <= nx < self.size and 0 <= ny < self.size:
+    #                 nt = (nx, ny)
+    #                 if nt == goal:
+    #                     return True
+    #                 if nt not in self.walls and nt not in visited:
+    #                     visited.add(nt)
+    #                     q.append(nt)
+    #     return False

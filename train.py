@@ -12,7 +12,7 @@ loss_fn = nn.MSELoss()
 
 gamma = 0.99
 epsilon = 1.0
-render = False
+render = env.render_mode
 
 for episode in range(400):
     state = env.reset()
