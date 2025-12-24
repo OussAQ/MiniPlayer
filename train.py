@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
+from collections import deque
 from dqn import DQN, ReplayMemory
 from grid import GridGame
 
@@ -34,8 +35,22 @@ step_count = 0
 for episode in range(500):
     state = env.reset()
     done = False
+    
+    # Early termination tracking
+    max_steps = 2 * env.size * env.size  # Maximum steps: 2 * grid area
+    episode_steps = 0
+    recent_positions = deque(maxlen=6)  # Track recent positions
+    recent_actions = deque(maxlen=6)  # Track recent actions
+    early_termination_reason = None
 
     while not done:
+        episode_steps += 1
+        
+        # Early termination: too many steps
+        if episode_steps > max_steps:
+            done = True
+            early_termination_reason = f"max_steps ({max_steps})"
+            break
         # Epsilon-greedy action selection
         if random.random() < epsilon:
             action = random.randint(0, 3)
@@ -44,6 +59,56 @@ for episode in range(500):
                 action = torch.argmax(model(torch.tensor(state, dtype=torch.float32))).item()
 
         next_state, reward, done = env.step(action)
+        
+        # Track position and action for cycle detection
+        current_pos = tuple(env.player)
+        recent_positions.append(current_pos)
+        recent_actions.append(action)
+        
+        # Detect and penalize back-and-forth behavior
+        cycle_penalty = 0.0
+        if len(recent_actions) >= 4:
+            last_4_actions = list(recent_actions)[-4:]
+            
+            # Pattern 1: A-B-A-B (back and forth)
+            # Opposite pairs: (0,1)=up-down, (1,0)=down-up, (2,3)=left-right, (3,2)=right-left
+            opposite_pairs = [(0, 1), (1, 0), (2, 3), (3, 2)]
+            if (last_4_actions[0] == last_4_actions[2] and 
+                last_4_actions[1] == last_4_actions[3] and
+                (last_4_actions[0], last_4_actions[1]) in opposite_pairs):
+                cycle_penalty = -2.0  # Penalty for back-and-forth
+                # If repeated multiple times, terminate early
+                if len(recent_actions) >= 6:
+                    last_6_actions = list(recent_actions)[-6:]
+                    if (last_6_actions[0] == last_6_actions[2] == last_6_actions[4] and
+                        last_6_actions[1] == last_6_actions[3] == last_6_actions[5] and
+                        (last_6_actions[0], last_6_actions[1]) in opposite_pairs):
+                        done = True
+                        early_termination_reason = "back_and_forth_cycle"
+                        break
+            
+            # Pattern 2: Circular pattern - visiting same positions repeatedly
+            if len(recent_positions) >= 4:
+                last_4_positions = list(recent_positions)[-4:]
+                # If positions repeat (A -> B -> A -> B) and not just staying in place
+                if (last_4_positions[0] == last_4_positions[2] and 
+                    last_4_positions[1] == last_4_positions[3] and
+                    last_4_positions[0] != last_4_positions[1]):
+                    cycle_penalty = -1.5  # Penalty for circular movement
+                    # If repeated 3 times (6 steps), terminate
+                    if len(recent_positions) >= 6:
+                        last_6_positions = list(recent_positions)[-6:]
+                        if (last_6_positions[0] == last_6_positions[2] == last_6_positions[4] and
+                            last_6_positions[1] == last_6_positions[3] == last_6_positions[5] and
+                            last_6_positions[0] != last_6_positions[1]):
+                            done = True
+                            early_termination_reason = "circular_cycle"
+                            break
+        
+        # Apply cycle penalty to reward
+        reward += cycle_penalty
+        
+        # Store transition with modified reward
         memory.push(state, action, next_state, reward, done)
         step_count += 1
 
@@ -88,7 +153,8 @@ for episode in range(500):
 
     if (episode+1) % 10 == 0:
         if len(memory) >= min_memory_size:
-            print(f"Episode {episode+1}, Loss: {loss.item():.4f}, Epsilon: {epsilon:.2f}, Memory: {len(memory)}")
+            termination_info = f", Terminated: {early_termination_reason}" if early_termination_reason else ""
+            print(f"Episode {episode+1}, Loss: {loss.item():.4f}, Epsilon: {epsilon:.2f}, Memory: {len(memory)}, Steps: {episode_steps}{termination_info}")
         else:
             print(f"Episode {episode+1}, Collecting samples... ({len(memory)}/{min_memory_size}), Epsilon: {epsilon:.2f}")
 
