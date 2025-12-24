@@ -31,7 +31,7 @@ epsilon = 1.0
 render = env.render_mode
 step_count = 0
 
-for episode in range(1000):
+for episode in range(500):
     state = env.reset()
     done = False
 
@@ -79,7 +79,7 @@ for episode in range(1000):
 
         state = next_state
 
-    epsilon = max(0.1, epsilon * 0.99)
+    epsilon = max(0.1, epsilon * 0.995)
 
     # Update target network periodically
     if (episode + 1) % update_target_every == 0:
