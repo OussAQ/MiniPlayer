@@ -23,13 +23,14 @@ HIGH_RATIO = 30
 class GridGame:
     def __init__(self, size=GRID_SIZE, render_mode=render_mode):
         self.render_mode = render_mode
+        self.size = size    # Size of the grid
+        
         if render_mode:
             pygame.init()
             self.screen = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE))
             self.caption = pygame.display.set_caption("AI Grid Game")
             self.clock = pygame.time.Clock()
 
-        self.size = size    # Size of the grid
         self.reset()    # Initialize the game
 
     def reset(self):
@@ -68,36 +69,57 @@ class GridGame:
         return self.get_state(), reward, done
 
     def hit_wall(self, dx, dy):
-        return [self.player[0] + dx, self.player[1] + dy] in self.walls
+        nx = self.player[0] + dx
+        ny = self.player[1] + dy
+        if not (0 <= nx < self.size and 0 <= ny < self.size):
+            return True
+        return (nx, ny) in self.walls
     
-    def is_reachable(self):
-        # Simple BFS to ensure the goal is reachable from the start
-        queue = deque()
-        queue.append(self.player)
-        visited = set()
-        visited.add(tuple(self.player))
-
-        while queue:
-            x, y = queue.popleft()
-            if [x, y] == self.goal:
-                return True
-            for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
-                nx, ny = x + dx, y + dy
-                if 0 <= nx < self.size and 0 <= ny < self.size and [nx, ny] not in self.walls and (nx, ny) not in visited:
-                    visited.add((nx, ny))
-                    queue.append([nx, ny])
-        return False
+    # def is_reachable(self):
+    #     start = tuple(self.player)
+    #     goal = tuple(self.goal)
+    #     if start == goal:
+    #         return True
+    #     q = deque([start])
+    #     visited = {start}
+    #     while q:
+    #         x, y = q.popleft()
+    #         for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+    #             nx, ny = x + dx, y + dy
+    #             if 0 <= nx < self.size and 0 <= ny < self.size:
+    #                 nt = (nx, ny)
+    #                 if nt == goal:
+    #                     return True
+    #                 if nt not in self.walls and nt not in visited:
+    #                     visited.add(nt)
+    #                     q.append(nt)
+    #     return False
     
+    # Used sets instead of lists for walls for faster lookup
     def generate_walls(self, gen_ratio=0.2):
-        self.walls = []
-        while True:
-            self.walls = []
-            for x in range(self.size):
-                for y in range(self.size):
-                    if random.random() < gen_ratio and [x, y] != self.player and [x, y] != self.goal:
-                        self.walls.append([x, y])
-            if self.is_reachable():
-                break
+        sx, sy = self.player
+        gx, gy = self.goal
+        path = set()
+        
+        if random.random() < 0.5:
+            for x in range(min(sx, gx), max(sx, gx) + 1):
+                path.add((x, sy))
+            for y in range(min(sy, gy), max(sy, gy) + 1):
+                path.add((gx, y))
+        else:
+            for y in range(min(sy, gy), max(sy, gy) + 1):
+                path.add((sx, y))
+            for x in range(min(sx, gx), max(sx, gx) + 1):
+                path.add((x, gy))
+        
+        walls = set()
+        for x in range(self.size):
+            for y in range(self.size):
+                if (x,y) == (sx, sy) or (x,y) == (gx, gy) or (x,y) in path:
+                    continue
+                if random.random() < gen_ratio:
+                    walls.add((x,y))
+        self.walls = walls
 
     def render(self):
         self.screen.fill((30, 30, 30))
