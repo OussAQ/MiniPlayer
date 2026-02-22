@@ -37,7 +37,7 @@ for episode in range(500):
     done = False
     
     # Early termination tracking
-    max_steps = 2 * env.size * env.size  # Maximum steps: 2 * grid area
+    max_steps = 2 * env.size * env.size
     episode_steps = 0
     recent_positions = deque(maxlen=6)  # Track recent positions
     recent_actions = deque(maxlen=6)  # Track recent actions
@@ -51,6 +51,7 @@ for episode in range(500):
             done = True
             early_termination_reason = f"max_steps ({max_steps})"
             break
+        
         # Epsilon-greedy action selection
         if random.random() < epsilon:
             action = random.randint(0, 3)
