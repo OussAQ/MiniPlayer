@@ -54,17 +54,28 @@ class GridGame:
             
         moves = [(-1,0), (1,0), (0,-1), (0,1)]
         dx, dy = moves[action]
+        
+        # Calculate distance before move
+        old_distance = abs(self.player[0] - self.goal[0]) + abs(self.player[1] - self.goal[1])
+        
         # Move player if no wall
         if not self.hit_wall(dx, dy):
             self.player[0] = np.clip(self.player[0] + dx, 0, self.size-1)
             self.player[1] = np.clip(self.player[1] + dy, 0, self.size-1)
-            reward = -1
+            
+            # Calculate distance after move
+            new_distance = abs(self.player[0] - self.goal[0]) + abs(self.player[1] - self.goal[1])
+            
+            # Reward for getting closer, penalty for moving away
+            distance_reward = (old_distance - new_distance) * 0.1  # Closer to goal = positive
+            reward = distance_reward - 0.05  # Small penalty to encourage efficiency
         else:
-            reward = -5
+            reward = -0.5  # Reduced wall penalty
+            
         done = False
 
         if self.player == self.goal:
-            reward = 10
+            reward = 1.0  # Goal reward
             done = True
 
         #self.render()

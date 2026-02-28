@@ -14,13 +14,7 @@ GAE_LAMBDA = 0.95
 EPOCHS = 10 
 BATCH_SIZE = 64
 CLIP_RATIO = 0.2 
-ENTROPY_COEFF = 0.01  # Entropy bonus
-
-env = GridGame()
-state_size = 4 + env.size * env.size
-action_size = 4  # up, down, left, right
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+ENTROPY_COEFF = 0.05  # Entropy bonus (increased for better exploration)
 model = PPO(state_size=state_size, action_size=action_size).to(device)
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
@@ -44,9 +38,11 @@ def compute_gae(rewards, values, dones, gamma=0.99, lambda_=0.95):
     return np.array(advantages)
 
 
-def train_ppo(num_episodes=1000, update_freq=2048):
+def train_ppo(num_episodes=1000, update_freq=1024, max_steps_per_episode=100):
     episode_rewards = []
     step_count = 0
+    no_improvement_count = 0
+    best_avg_reward = -float('inf')
     
     for episode in range(num_episodes):
         state = env.reset()
@@ -56,7 +52,7 @@ def train_ppo(num_episodes=1000, update_freq=2048):
         episode_steps = 0
         
         done = False
-        while not done:
+        while not done and episode_steps < max_steps_per_episode:
             state_tensor = torch.FloatTensor(state).unsqueeze(0).to(device)
             
             # Get action from policy
@@ -69,6 +65,7 @@ def train_ppo(num_episodes=1000, update_freq=2048):
             
             # Step environment
             next_state, reward, done = env.step(action)
+            # Reward shaping now handled in grid.py
             
             # Store trajectory
             states.append(state)
@@ -84,7 +81,7 @@ def train_ppo(num_episodes=1000, update_freq=2048):
             step_count += 1
             
             # Update when trajectory is long enough or episode done
-            if step_count % update_freq == 0 or done:
+            if step_count % update_freq == 0 or done or episode_steps >= max_steps_per_episode:
                 # Compute advantages
                 advantages = compute_gae(rewards, values, dones, gamma=GAMMA, lambda_=GAE_LAMBDA)
                 returns = advantages + np.array(values)
@@ -133,11 +130,25 @@ def train_ppo(num_episodes=1000, update_freq=2048):
         
         episode_rewards.append(episode_reward)
         
-        print(f"Episode {episode + 1}/{num_episodes}, Reward: {episode_reward}")
+        print(f"Episode {episode + 1}/{num_episodes}, Reward: {episode_reward:.2f}, Steps: {episode_steps}")
 
         if (episode + 1) % 50 == 0:
             avg_reward = np.mean(episode_rewards[-50:])
             print(f"Episode {episode + 1}/{num_episodes}, Avg Reward (last 50): {avg_reward:.2f}")
+            
+            # Early stopping if no improvement for 200 episodes
+            if avg_reward > best_avg_reward:
+                best_avg_reward = avg_reward
+                no_improvement_count = 0
+                print(f"✓ New best average reward: {avg_reward:.2f}")
+            else:
+                no_improvement_count += 1
+                print(f"No improvement for {no_improvement_count} checks")
+            
+            if no_improvement_count >= 4:  # 4 checks × 50 episodes = 200 episodes no improvement
+                print(f"Early stopping! No improvement for 200 episodes.")
+                torch.save(model.state_dict(), "model/ppo_model_early_stop.pth")
+                break
         
         if (episode + 1) % 200 == 0:
             torch.save(model.state_dict(), f"model/ppo_model_episode_{episode + 1}.pth")
@@ -147,5 +158,5 @@ def train_ppo(num_episodes=1000, update_freq=2048):
 
 
 if __name__ == "__main__":
-    rewards = train_ppo(num_episodes=1000, update_freq=2048)
+    rewards = train_ppo(num_episodes=1000, update_freq=1024)
     torch.save(model.state_dict(), "model/ppo_model_final.pth")
