@@ -7,6 +7,12 @@ from collections import deque
 from grid import GridGame
 from ppo import PPO
 
+# Initialize environment and device
+env = GridGame()
+state_size = 4 + env.size * env.size
+action_size = 4  # up, down, left, right
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # Hyperparameters
 LEARNING_RATE = 3e-4
 GAMMA = 0.99 
