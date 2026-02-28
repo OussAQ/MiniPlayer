@@ -47,8 +47,6 @@ def compute_gae(rewards, values, dones, gamma=0.99, lambda_=0.95):
 def train_ppo(num_episodes=1000, update_freq=1024, max_steps_per_episode=100):
     episode_rewards = []
     step_count = 0
-    no_improvement_count = 0
-    best_avg_reward = -float('inf')
     
     for episode in range(num_episodes):
         state = env.reset()
@@ -136,25 +134,9 @@ def train_ppo(num_episodes=1000, update_freq=1024, max_steps_per_episode=100):
         
         episode_rewards.append(episode_reward)
         
-        print(f"Episode {episode + 1}/{num_episodes}, Reward: {episode_reward:.2f}, Steps: {episode_steps}")
-
         if (episode + 1) % 50 == 0:
             avg_reward = np.mean(episode_rewards[-50:])
             print(f"Episode {episode + 1}/{num_episodes}, Avg Reward (last 50): {avg_reward:.2f}")
-            
-            # Early stopping if no improvement for 200 episodes
-            if avg_reward > best_avg_reward:
-                best_avg_reward = avg_reward
-                no_improvement_count = 0
-                print(f"✓ New best average reward: {avg_reward:.2f}")
-            else:
-                no_improvement_count += 1
-                print(f"No improvement for {no_improvement_count} checks")
-            
-            if no_improvement_count >= 4:  # 4 checks × 50 episodes = 200 episodes no improvement
-                print(f"Early stopping! No improvement for 200 episodes.")
-                torch.save(model.state_dict(), "model/ppo_model_early_stop.pth")
-                break
         
         if (episode + 1) % 200 == 0:
             torch.save(model.state_dict(), f"model/ppo_model_episode_{episode + 1}.pth")
