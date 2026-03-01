@@ -17,7 +17,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 LEARNING_RATE = 3e-4
 GAMMA = 0.99 
 GAE_LAMBDA = 0.95 
-EPOCHS = 10 
+EPOCHS = 10
 BATCH_SIZE = 64
 CLIP_RATIO = 0.2 
 ENTROPY_COEFF = 0.05  # Entropy bonus (increased for better exploration)
@@ -146,5 +146,5 @@ def train_ppo(num_episodes=1000, update_freq=1024, max_steps_per_episode=100):
 
 
 if __name__ == "__main__":
-    rewards = train_ppo(num_episodes=1000, update_freq=1024)
+    rewards = train_ppo(num_episodes=10000, update_freq=1024)
     torch.save(model.state_dict(), "model/ppo_model_final.pth")
