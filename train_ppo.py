@@ -18,9 +18,9 @@ LEARNING_RATE = 3e-4
 GAMMA = 0.99 
 GAE_LAMBDA = 0.95 
 EPOCHS = 10
-BATCH_SIZE = 64
+BATCH_SIZE = 32  # Smaller batch for shorter episodes
 CLIP_RATIO = 0.2 
-ENTROPY_COEFF = 0.05  # Entropy bonus (increased for better exploration)
+ENTROPY_COEFF = 0.01  # Reduced entropy to allow convergence
 model = PPO(state_size=state_size, action_size=action_size).to(device)
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
@@ -44,7 +44,7 @@ def compute_gae(rewards, values, dones, gamma=0.99, lambda_=0.95):
     return np.array(advantages)
 
 
-def train_ppo(num_episodes=1000, update_freq=1024, max_steps_per_episode=100):
+def train_ppo(num_episodes=10000, update_freq=256, max_steps_per_episode=100):
     episode_rewards = []
     step_count = 0
     
@@ -146,5 +146,5 @@ def train_ppo(num_episodes=1000, update_freq=1024, max_steps_per_episode=100):
 
 
 if __name__ == "__main__":
-    rewards = train_ppo(num_episodes=10000, update_freq=1024)
+    rewards = train_ppo(num_episodes=3000, update_freq=256)
     torch.save(model.state_dict(), "model/ppo_model_final.pth")

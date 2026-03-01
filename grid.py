@@ -3,7 +3,7 @@ import pygame
 import random
 from collections import deque
 
-GRID_SIZE = 5
+GRID_SIZE = 10
 CELL_SIZE = 500 // GRID_SIZE # Cell size in pixels
 WINDOW_SIZE = GRID_SIZE * CELL_SIZE
 render_mode = False
@@ -66,16 +66,16 @@ class GridGame:
             # Calculate distance after move
             new_distance = abs(self.player[0] - self.goal[0]) + abs(self.player[1] - self.goal[1])
             
-            # Reward for getting closer, penalty for moving away
-            distance_reward = (old_distance - new_distance) * 0.1  # Closer to goal = positive
-            reward = distance_reward - 0.05  # Small penalty to encourage efficiency
+            # Reward for getting closer (stronger signal)
+            distance_reward = (old_distance - new_distance) * 0.25  # 0.25 per step closer
+            reward = distance_reward  # No movement penalty, encourage exploration
         else:
-            reward = -0.5  # Reduced wall penalty
+            reward = -1.5  # Stronger penalty for hitting walls
             
         done = False
 
         if self.player == self.goal:
-            reward = 1.0  # Goal reward
+            reward = 10.0  # Strong goal reward
             done = True
 
         #self.render()
